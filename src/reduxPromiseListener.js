@@ -36,6 +36,8 @@ export default function createListener(): PromiseListener {
   }
 
   const createAsyncFunction = (config: Config): AsyncFunction => {
+    const isResolve = typeof config.resolve === 'function' ? config.resolve : action => action.type === config.resolve
+    const isReject = typeof config.reject === 'function' ? config.reject : action => action.type === config.reject
     const listenerId = nextListenerId++
     const unsubscribe = () => {
       delete listeners[listenerId]
@@ -52,10 +54,10 @@ export default function createListener(): PromiseListener {
           )
         )
         const listener: Listener = action => {
-          if (action.type === config.resolve) {
+          if (isResolve(action)) {
             unsubscribe()
             resolve((config.getPayload || defaultGetPayload)(action))
-          } else if (action.type === config.reject) {
+          } else if (isReject(action)) {
             unsubscribe()
             reject((config.getError || defaultGetError)(action))
           }
